@@ -10,7 +10,7 @@
 
 */
 
-import express from "express"
+import express from "express" // 3RD PARTY MODULE (needs to be installed!)
 import fs from "fs" // CORE MODULE (no need to be installed!)
 import { fileURLToPath } from "url" // CORE MODULE
 import { dirname, join } from "path" // CORE MODULE
@@ -84,17 +84,54 @@ usersRouter.get("/", (req, res) => {
 
 // 3.
 usersRouter.get("/:userId", (req, res) => {
-  res.send({ message: "Hello I am the GET SINGLE USER" })
+  // 1. Obtain userId from URL
+  const userID = req.params.userId
+  console.log("USER ID ", userID)
+
+  // 2. Read file --> obtaining an array
+  const users = JSON.parse(fs.readFileSync(usersJSONPath))
+
+  // 3. Find specific user in the array
+  const foundUser = users.find(user => user.id === userID) // = = =
+
+  // 4. Send back a proper response
+
+  res.send(foundUser)
 })
 
 // 4.
 usersRouter.put("/:userId", (req, res) => {
-  res.send({ message: "Hello I am the PUT " })
+  // 1. Read file --> obtaining an array of users
+  const users = JSON.parse(fs.readFileSync(usersJSONPath))
+
+  // 2. Modify the specified user into the array by merging previous properties and new properties coming from req.body
+  const index = users.findIndex(user => user.id === req.params.userId)
+  const oldUser = users[index]
+
+  const updatedUser = { ...oldUser, ...req.body, updatedAt: new Date() }
+
+  users[index] = updatedUser
+
+  // 3. Saving the modified array back to the file
+  fs.writeFileSync(usersJSONPath, JSON.stringify(users))
+
+  // 4. Send back a proper response
+  res.send(updatedUser)
 })
 
 // 5.
 usersRouter.delete("/:userId", (req, res) => {
-  res.send({ message: "Hello I am the DELETE" })
+  // 1. Read file --> obtaining an array of users
+  const users = JSON.parse(fs.readFileSync(usersJSONPath))
+
+  // 2. Filter out the specified user from the array, obtaining an array of just the remaining users
+  const remainingUsers = users.filter(user => user.id !== req.params.userId) // ! = =
+
+  // 3. Save remaining users back into users.json file
+  fs.writeFileSync(usersJSONPath, JSON.stringify(remainingUsers))
+
+  // 4. Send back a proper response
+  res.status(204).send()
 })
 
 export default usersRouter
