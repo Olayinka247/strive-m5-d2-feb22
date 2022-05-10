@@ -11,22 +11,90 @@
 */
 
 import express from "express"
+import fs from "fs" // CORE MODULE (no need to be installed!)
+import { fileURLToPath } from "url" // CORE MODULE
+import { dirname, join } from "path" // CORE MODULE
+import uniqid from "uniqid" // 3RD PARTY MODULE (needs to be installed!)
 
 const usersRouter = express.Router()
 
+// ********************* HOW TO GET users.json PATH **********************************
+
+// target --> C:\Strive\FullStack\2022\Feb22\M5\strive-m5-d2-feb22\src\apis\users\users.json
+
+// 1. we gonna start from current's file path --> C:\Strive\FullStack\2022\Feb22\M5\strive-m5-d2-feb22\src\apis\users\index.js
+// const currentFileURL = import.meta.url
+
+// console.log("CURRENT FILE URL: ", currentFileURL)
+
+// const currentFilePath = fileURLToPath(currentFileURL)
+// console.log("CURRENT FILE PATH: ", currentFilePath)
+
+// // 2. we gonna obtain parent's folder path --> C:\Strive\FullStack\2022\Feb22\M5\strive-m5-d2-feb22\src\apis\users\
+// const parentFolderPath = dirname(currentFilePath)
+// console.log("PARENT FOLDER PATH: ", parentFolderPath)
+
+// // 3. we gonna concatenate parent's folder path with users.json file name --> C:\Strive\FullStack\2022\Feb22\M5\strive-m5-d2-feb22\src\apis\users\users.json
+
+// const usersJSONPath = join(parentFolderPath, "users.json")
+// console.log("USERS JSON PATH ", usersJSONPath)
+
+const usersJSONPath = join(dirname(fileURLToPath(import.meta.url)), "users.json")
+
+// ***********************************************************************************
+
 // 1.
-usersRouter.post("/", (req, res) => {})
+usersRouter.post("/", (req, res) => {
+  // 1. Read the request body to obtain the new user's data
+  console.log("REQ BODY: ", req.body) // remember to add express.json() in server.js!!!!
+
+  // 2. Add some server generated informations (unique id, createdAt)
+  const newUser = { ...req.body, createdAt: new Date(), id: uniqid() }
+
+  console.log("NEW USER ", newUser)
+
+  // 3. Read users.json file --> obtaining an array
+  const users = JSON.parse(fs.readFileSync(usersJSONPath))
+
+  // 4. Push new user to the array
+  users.push(newUser)
+
+  // 5. Write the array back to the file
+  fs.writeFileSync(usersJSONPath, JSON.stringify(users)) // we CANNOT pass an array to this function, but we can pass the stringified version of it
+
+  // 6. Send back a proper response
+
+  res.status(201).send({ id: newUser.id })
+})
 
 // 2.
-usersRouter.get("/", (req, res) => {})
+usersRouter.get("/", (req, res) => {
+  // 1. Read the content of users.json file
+  const fileContent = fs.readFileSync(usersJSONPath) // You obtain a BUFFER object, which is MACHINE READABLE ONLY (it could be "translated" tho)
+  console.log("CONTENT ", fileContent)
+
+  // 2. Obtain an array from the file
+  const usersArray = JSON.parse(fileContent) // JSON.parse() --> buffer to array
+  console.log("CONTENT AS A JSON ", usersArray)
+
+  // 3. Send back the array as a response
+
+  res.send(usersArray)
+})
 
 // 3.
-usersRouter.get("/:userId", (req, res) => {})
+usersRouter.get("/:userId", (req, res) => {
+  res.send({ message: "Hello I am the GET SINGLE USER" })
+})
 
 // 4.
-usersRouter.put("/:userId", (req, res) => {})
+usersRouter.put("/:userId", (req, res) => {
+  res.send({ message: "Hello I am the PUT " })
+})
 
 // 5.
-usersRouter.delete("/:userId", (req, res) => {})
+usersRouter.delete("/:userId", (req, res) => {
+  res.send({ message: "Hello I am the DELETE" })
+})
 
 export default usersRouter

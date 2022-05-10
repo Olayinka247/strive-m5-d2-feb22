@@ -11,8 +11,13 @@
 */
 
 import express from "express"
+import fs from "fs" // CORE MODULE (no need to be installed!)
+import { fileURLToPath } from "url" // CORE MODULE
+import { dirname, join } from "path" // CORE MODULE
 
 const booksRouter = express.Router()
+
+const booksJSONPath = join(dirname(fileURLToPath(import.meta.url)), "books.json")
 
 // 1.
 booksRouter.post("/", (req, res) => {})
